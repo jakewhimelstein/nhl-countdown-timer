@@ -5,50 +5,215 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NHL Countdown Timer</title>
   <style>
+    :root {
+      --rink-blue: #0d3b66;
+      --rink-ice: #e6f4ff;
+      --goal-red: #d7263d;
+      --board-yellow: #f5b700;
+      --text-main: #04111e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at top, #0b253b, #020813);
+      background: radial-gradient(circle at top, #020813, #04111e 55%, #000000 100%);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      color: #f5f7fa;
+      color: var(--text-main);
+      overflow: hidden;
     }
+
+    /* Simple “ice rink” */
+    .rink {
+      position: relative;
+      width: min(90vw, 700px);
+      aspect-ratio: 2.1 / 1;
+      background: radial-gradient(circle at 20% 0%, #ffffff, #dcefff 45%, #c7e0ff 100%);
+      border-radius: 40px;
+      border: 6px solid #ffffff;
+      box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.75),
+        0 0 0 6px #0a1930,
+        0 0 0 9px var(--board-yellow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 40px;
+      overflow: hidden;
+    }
+
+    .rink::before,
+    .rink::after {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border-radius: 34px;
+      border: 3px solid rgba(9, 58, 120, 0.5);
+      pointer-events: none;
+    }
+
+    .center-line,
+    .blue-line-left,
+    .blue-line-right {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      opacity: 0.9;
+    }
+
+    .center-line {
+      left: 50%;
+      transform: translateX(-50%);
+      background: repeating-linear-gradient(
+        to bottom,
+        var(--goal-red),
+        var(--goal-red) 10px,
+        transparent 10px,
+        transparent 18px
+      );
+    }
+
+    .blue-line-left {
+      left: 30%;
+      background: var(--rink-blue);
+    }
+
+    .blue-line-right {
+      right: 30%;
+      background: var(--rink-blue);
+    }
+
+    .faceoff-circle {
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: 3px solid var(--rink-blue);
+    }
+
+    .faceoff-center {
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border-color: var(--goal-red);
+    }
+
+    .faceoff-left {
+      left: 22%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .faceoff-right {
+      right: 22%;
+      top: 50%;
+      transform: translate(50%, -50%);
+    }
+
+    /* Countdown card */
     #nhl-countdown {
-      padding: 24px 32px;
-      border-radius: 16px;
-      background: rgba(3, 12, 24, 0.9);
-      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6);
+      position: relative;
+      padding: 22px 28px 18px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow:
+        0 14px 26px rgba(0, 0, 0, 0.35),
+        0 0 0 2px rgba(0, 0, 0, 0.03);
       text-align: center;
       min-width: 260px;
+      max-width: 360px;
+      backdrop-filter: blur(8px);
     }
+
+    #nhl-countdown::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      border: 2px solid rgba(10, 25, 48, 0.08);
+      pointer-events: none;
+    }
+
     #nhl-countdown-title {
-      font-size: 1rem;
+      font-size: 0.9rem;
       text-transform: uppercase;
-      letter-spacing: 0.18em;
-      color: #8ca9d6;
-      margin-bottom: 6px;
+      letter-spacing: 0.26em;
+      color: #4b6688;
+      margin-bottom: 10px;
     }
+
     #nhl-countdown-timer {
       font-family: "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 2.4rem;
-      font-weight: 600;
+      font-size: 2.5rem;
+      font-weight: 700;
       letter-spacing: 0.1em;
-      margin: 8px 0 4px;
+      margin: 6px 0 2px;
+      color: #020b1a;
+      text-shadow: 0 0 14px rgba(9, 38, 76, 0.28);
     }
+
     #nhl-countdown-status {
-      font-size: 0.9rem;
-      color: #c5d5f2;
+      font-size: 0.8rem;
+      color: #495972;
+      margin-top: 4px;
+    }
+
+    .puck {
+      position: absolute;
+      bottom: 18px;
+      right: 22px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 25%, #3c4b5a, #151c24 60%, #05070a 100%);
+      box-shadow:
+        0 4px 10px rgba(0, 0, 0, 0.6),
+        inset 0 1px 2px rgba(255, 255, 255, 0.15);
+    }
+
+    .puck::after {
+      content: "";
+      position: absolute;
+      inset: 6px;
+      border-radius: 50%;
+      border: 2px solid rgba(0, 0, 0, 0.7);
+    }
+
+    @media (max-width: 600px) {
+      .rink {
+        padding: 20px;
+        border-radius: 30px;
+      }
+
+      #nhl-countdown-timer {
+        font-size: 2rem;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Container the script will hook into -->
-  <div id="nhl-countdown">
-    <div id="nhl-countdown-title">Next NHL Game</div>
-    <div id="nhl-countdown-timer">--:--:--</div>
-    <div id="nhl-countdown-status">Fetching schedule...</div>
+  <div class="rink">
+    <div class="center-line"></div>
+    <div class="blue-line-left"></div>
+    <div class="blue-line-right"></div>
+    <div class="faceoff-circle faceoff-center"></div>
+    <div class="faceoff-circle faceoff-left"></div>
+    <div class="faceoff-circle faceoff-right"></div>
+
+    <!-- Container the script will hook into -->
+    <div id="nhl-countdown">
+      <div id="nhl-countdown-title">Next NHL Game</div>
+      <div id="nhl-countdown-timer">--:--:--</div>
+      <div id="nhl-countdown-status">Finding the next puck drop...</div>
+      <div class="puck"></div>
+    </div>
   </div>
 
   <!-- Your existing countdown script -->
