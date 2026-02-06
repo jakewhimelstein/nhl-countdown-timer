@@ -16,12 +16,23 @@ async function getNextNHLGameStartTime() {
         const data = await resp.json();
         console.log("[NHL Timer] Raw schedule payload (schedule/now):", data);
 
-        // TODO: Once we see the structure in the console, we can pick out the
-        // next game's start time. For now, just return null so UI stays safe.
+        // TODO: Once api-web.nhle.com sends proper CORS headers, parse this payload
+        // and return the earliest upcoming game time.
         console.warn("[NHL Timer] schedule/now parsing not implemented yet.");
         return null;
     } catch (e) {
         console.error("[NHL Timer] Failed to fetch NHL schedule.", e);
+
+        // Fallback: if the live API isn't reachable (CORS, network, etc.),
+        // use a hard-coded next game date so the countdown still works.
+        // Adjust this date/time to the next real NHL game when needed.
+        const fallback = new Date("2026-02-25T16:00:00-08:00"); // Feb 25, 2026 4:00 PM PT
+        const now = new Date();
+        if (fallback > now) {
+            console.warn("[NHL Timer] Using fallback next-game date:", fallback.toISOString());
+            return fallback;
+        }
+
         return null;
     }
 }
