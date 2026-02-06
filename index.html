@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NHL Countdown Timer</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #0b253b, #020813);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #f5f7fa;
+    }
+    #nhl-countdown {
+      padding: 24px 32px;
+      border-radius: 16px;
+      background: rgba(3, 12, 24, 0.9);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6);
+      text-align: center;
+      min-width: 260px;
+    }
+    #nhl-countdown-title {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: #8ca9d6;
+      margin-bottom: 6px;
+    }
+    #nhl-countdown-timer {
+      font-family: "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 2.4rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      margin: 8px 0 4px;
+    }
+    #nhl-countdown-status {
+      font-size: 0.9rem;
+      color: #c5d5f2;
+    }
+  </style>
+</head>
+<body>
+  <!-- Container the script will hook into -->
+  <div id="nhl-countdown">
+    <div id="nhl-countdown-title">Next NHL Game</div>
+    <div id="nhl-countdown-timer">--:--:--</div>
+    <div id="nhl-countdown-status">Fetching schedule...</div>
+  </div>
+
+  <!-- Your existing countdown script -->
+  <script src="NHL Countdown Timer.js"></script>
+</body>
+</html>
+
+
