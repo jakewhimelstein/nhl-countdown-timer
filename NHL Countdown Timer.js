@@ -5,6 +5,7 @@ async function getNextNHLGameStartTime() {
     try {
         const today = new Date();
         const startStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
+        console.log("[NHL Timer] Today:", today.toISOString(), "startStr:", startStr);
 
         // Look ahead 200 days in a single request
         const future = new Date(today);
@@ -16,14 +17,24 @@ async function getNextNHLGameStartTime() {
         const proxyPrefix = "https://corsproxy.io/?";
         const apiUrl = `https://statsapi.web.nhl.com/api/v1/schedule?startDate=${startStr}&endDate=${endStr}`;
 
-        const resp = await fetch(`${proxyPrefix}${apiUrl}`);
+        // corsproxy.io expects the target URL to be URL-encoded
+        const fullUrl = `${proxyPrefix}${encodeURIComponent(apiUrl)}`;
+        console.log("[NHL Timer] Fetching schedule URL:", fullUrl);
+
+        const resp = await fetch(fullUrl);
+        console.log("[NHL Timer] Response status:", resp.status);
+
         const data = await resp.json();
+        console.log("[NHL Timer] Raw schedule payload:", data);
 
         const allDates = data.dates || [];
+        console.log("[NHL Timer] Number of date entries:", allDates.length);
+
         const allGames = allDates.flatMap(d => d.games || []);
+        console.log("[NHL Timer] Total games in range:", allGames.length);
 
         if (allGames.length === 0) {
-            console.warn("NHL API returned no games in range", { startStr, endStr });
+            console.warn("[NHL Timer] NHL API returned no games in range", { startStr, endStr });
             return null;
         }
 
@@ -35,15 +46,20 @@ async function getNextNHLGameStartTime() {
             .sort((a, b) => a.dateObj - b.dateObj);
 
         if (upcomingGames.length === 0) {
-            console.warn("No upcoming games after filtering by now", {
+            console.warn("[NHL Timer] No upcoming games after filtering by now", {
                 totalGames: allGames.length
             });
             return null;
         }
 
+        console.log("[NHL Timer] Next game selected:", {
+            date: upcomingGames[0].dateObj.toISOString(),
+            teams: upcomingGames[0].teams
+        });
+
         return upcomingGames[0].dateObj;
     } catch (e) {
-        console.error("Failed to fetch NHL schedule.", e);
+        console.error("[NHL Timer] Failed to fetch NHL schedule.", e);
         return null;
     }
 }
@@ -78,6 +94,7 @@ async function startNHLCountdownTimer(containerId = "nhl-countdown") {
 
     const nextGameTime = await getNextNHLGameStartTime();
     if (!nextGameTime) {
+        console.log("[NHL Timer] getNextNHLGameStartTime() returned null – staying in off-season mode.");
         if (statusEl) {
             statusEl.innerText = "No upcoming NHL games found. Off-season mode.";
         } else {
@@ -89,6 +106,12 @@ async function startNHLCountdownTimer(containerId = "nhl-countdown") {
         const now = new Date();
         const diff = nextGameTime - now;
         const formatted = formatCountdown(diff);
+        console.log("[NHL Timer] Tick:", {
+            now: now.toISOString(),
+            nextGameTime: nextGameTime.toISOString(),
+            diffMs: diff,
+            formatted
+        });
 
         if (timerEl) {
             timerEl.innerText = formatted;
