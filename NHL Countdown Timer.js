@@ -11,9 +11,12 @@ async function getNextNHLGameStartTime() {
         future.setDate(today.getDate() + 200);
         const endStr = future.toISOString().slice(0, 10);
 
-        const resp = await fetch(
-            `https://statsapi.web.nhl.com/api/v1/schedule?startDate=${startStr}&endDate=${endStr}`
-        );
+        // Use a simple CORS proxy so the NHL API can be called from GitHub Pages.
+        // Note: this relies on a third-party service and may have limits.
+        const proxyPrefix = "https://corsproxy.io/?";
+        const apiUrl = `https://statsapi.web.nhl.com/api/v1/schedule?startDate=${startStr}&endDate=${endStr}`;
+
+        const resp = await fetch(`${proxyPrefix}${apiUrl}`);
         const data = await resp.json();
 
         const allDates = data.dates || [];
