@@ -4,26 +4,41 @@
 async function getNextNHLGameStartTime() {
     try {
         const today = new Date();
-        let games = [];
+        const startStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
 
-        // Look ahead up to 365 days to find the very next scheduled NHL game
-        let addDays = 0;
-        while (games.length === 0 && addDays < 365) {
-            const future = new Date(today);
-            future.setDate(today.getDate() + addDays);
-            const fDateStr = future.toISOString().slice(0, 10); // YYYY-MM-DD
-            const resp = await fetch(
-                `https://statsapi.web.nhl.com/api/v1/schedule?startDate=${fDateStr}&endDate=${fDateStr}`
-            );
-            const d = await resp.json();
-            games = d.dates?.[0]?.games || [];
-            addDays++;
+        // Look ahead 200 days in a single request
+        const future = new Date(today);
+        future.setDate(today.getDate() + 200);
+        const endStr = future.toISOString().slice(0, 10);
+
+        const resp = await fetch(
+            `https://statsapi.web.nhl.com/api/v1/schedule?startDate=${startStr}&endDate=${endStr}`
+        );
+        const data = await resp.json();
+
+        const allDates = data.dates || [];
+        const allGames = allDates.flatMap(d => d.games || []);
+
+        if (allGames.length === 0) {
+            console.warn("NHL API returned no games in range", { startStr, endStr });
+            return null;
         }
 
-        if (games.length === 0) return null; // extremely unlikely – no games in the next year
-        // Find the earliest game
-        games.sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
-        return new Date(games[0].gameDate);
+        // Find the earliest game that is still in the future relative to 'now'
+        const now = new Date();
+        const upcomingGames = allGames
+            .map(game => ({ ...game, dateObj: new Date(game.gameDate) }))
+            .filter(game => game.dateObj >= now)
+            .sort((a, b) => a.dateObj - b.dateObj);
+
+        if (upcomingGames.length === 0) {
+            console.warn("No upcoming games after filtering by now", {
+                totalGames: allGames.length
+            });
+            return null;
+        }
+
+        return upcomingGames[0].dateObj;
     } catch (e) {
         console.error("Failed to fetch NHL schedule.", e);
         return null;
