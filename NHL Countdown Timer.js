@@ -1,61 +1,25 @@
 // Countdown timer until the next NHL game
 
-// Helper: Fetches the next NHL game start time from NHL public API
+// Helper: Fetches the next NHL game start time from an NHL web API (browser-friendly)
 async function getNextNHLGameStartTime() {
     try {
         const today = new Date();
-        const startStr = today.toISOString().slice(0, 10); // YYYY-MM-DD
-        console.log("[NHL Timer] Today:", today.toISOString(), "startStr:", startStr);
+        console.log("[NHL Timer] Today:", today.toISOString());
 
-        // Look ahead 200 days in a single request
-        const future = new Date(today);
-        future.setDate(today.getDate() + 200);
-        const endStr = future.toISOString().slice(0, 10);
+        // First attempt: use NHL's web schedule endpoint for 'now'
+        const url = "https://api-web.nhle.com/v1/schedule/now";
+        console.log("[NHL Timer] Fetching schedule via api-web.nhle.com:", url);
 
-        // Use a simple CORS proxy so the NHL API can be called from GitHub Pages.
-        // Note: this relies on a third-party service and may have limits.
-        // Use Cloudflare Worker as our NHL API proxy (handles CORS for us)
-        const workerBase = "https://nhl-countdown-proxy.jakewhimelstein.workers.dev";
-        const fullUrl = `${workerBase}?start=${encodeURIComponent(startStr)}&end=${encodeURIComponent(endStr)}`;
-        console.log("[NHL Timer] Fetching schedule via worker:", fullUrl);
-
-        const resp = await fetch(fullUrl);
+        const resp = await fetch(url);
         console.log("[NHL Timer] Response status:", resp.status);
 
         const data = await resp.json();
-        console.log("[NHL Timer] Raw schedule payload:", data);
+        console.log("[NHL Timer] Raw schedule payload (schedule/now):", data);
 
-        const allDates = data.dates || [];
-        console.log("[NHL Timer] Number of date entries:", allDates.length);
-
-        const allGames = allDates.flatMap(d => d.games || []);
-        console.log("[NHL Timer] Total games in range:", allGames.length);
-
-        if (allGames.length === 0) {
-            console.warn("[NHL Timer] NHL API returned no games in range", { startStr, endStr });
-            return null;
-        }
-
-        // Find the earliest game that is still in the future relative to 'now'
-        const now = new Date();
-        const upcomingGames = allGames
-            .map(game => ({ ...game, dateObj: new Date(game.gameDate) }))
-            .filter(game => game.dateObj >= now)
-            .sort((a, b) => a.dateObj - b.dateObj);
-
-        if (upcomingGames.length === 0) {
-            console.warn("[NHL Timer] No upcoming games after filtering by now", {
-                totalGames: allGames.length
-            });
-            return null;
-        }
-
-        console.log("[NHL Timer] Next game selected:", {
-            date: upcomingGames[0].dateObj.toISOString(),
-            teams: upcomingGames[0].teams
-        });
-
-        return upcomingGames[0].dateObj;
+        // TODO: Once we see the structure in the console, we can pick out the
+        // next game's start time. For now, just return null so UI stays safe.
+        console.warn("[NHL Timer] schedule/now parsing not implemented yet.");
+        return null;
     } catch (e) {
         console.error("[NHL Timer] Failed to fetch NHL schedule.", e);
         return null;
