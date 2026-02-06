@@ -14,13 +14,10 @@ async function getNextNHLGameStartTime() {
 
         // Use a simple CORS proxy so the NHL API can be called from GitHub Pages.
         // Note: this relies on a third-party service and may have limits.
-        // Use AllOrigins as a free CORS proxy. It returns the raw body with permissive CORS.
-        const proxyPrefix = "https://api.allorigins.win/raw?url=";
-        const apiUrl = `https://statsapi.web.nhl.com/api/v1/schedule?startDate=${startStr}&endDate=${endStr}`;
-
-        // AllOrigins expects the target URL to be URL-encoded
-        const fullUrl = `${proxyPrefix}${encodeURIComponent(apiUrl)}`;
-        console.log("[NHL Timer] Fetching schedule URL via AllOrigins:", fullUrl);
+        // Use Cloudflare Worker as our NHL API proxy (handles CORS for us)
+        const workerBase = "https://nhl-countdown-proxy.jakewhimelstein.workers.dev";
+        const fullUrl = `${workerBase}?start=${encodeURIComponent(startStr)}&end=${encodeURIComponent(endStr)}`;
+        console.log("[NHL Timer] Fetching schedule via worker:", fullUrl);
 
         const resp = await fetch(fullUrl);
         console.log("[NHL Timer] Response status:", resp.status);
